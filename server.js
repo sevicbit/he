@@ -4,14 +4,15 @@ const crypto = require("crypto");
 const path = require("path");
 
 const app = express();
+
+// serve HTML from /public
+app.use(express.static(path.join(__dirname, "public")));
 app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, "public"))); // serve your HTML
 
-/* ---- DB ---- */
-const raws = {}; 
-// raws[id] = { code }
+/* database */
+const raws = {}; // raws[id] = { code }
 
-/* ---- CREATE RAW ---- */
+/* create raw */
 app.post("/api/create", (req, res) => {
     const { code } = req.body;
 
@@ -25,7 +26,7 @@ app.post("/api/create", (req, res) => {
     res.json({ url: fullUrl });
 });
 
-/* ---- RAW ACCESS ---- */
+/* access raw */
 app.get("/raw/:id", (req, res) => {
     const id = req.params.id;
 
@@ -37,7 +38,7 @@ app.get("/raw/:id", (req, res) => {
         ua.includes("Roblox") ||
         ua.includes("HttpService") ||
         ua.includes("Game") ||
-        ua === ""; // Roblox sometimes sends empty UA
+        ua === "";
 
     if (isRoblox) {
         res.setHeader("Content-Type", "text/plain");
@@ -48,5 +49,7 @@ app.get("/raw/:id", (req, res) => {
     res.send("ANO SKID PA?");
 });
 
-/* ---- SERVER START ---- */
-app.listen(3000, () => console.log("Server running on port 3000"));
+/* start server */
+app.listen(3000, () => {
+    console.log("Server running on http://localhost:3000");
+});
