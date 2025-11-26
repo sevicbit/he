@@ -4,118 +4,97 @@
 <meta charset="UTF-8" />
 <title>Raw Generator</title>
 <style>
-/* SAME CSS YOU PROVIDED — UNCHANGED */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: monospace;
-}
-
-body {
-    background: #000;
-    color: #00ff00;
-    overflow: hidden;
-}
-
-canvas {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: -1;
-}
-
-.header {
-    display: flex;
-    align-items: center;
-    padding: 20px;
-    gap: 15px;
-}
-
-.header img {
-    width: 50px;
-    height: 50px;
-    border-radius: 100%;
-    border: 2px solid #00ff00;
-}
-
-.header h1 {
-    color: #00ff00;
-    font-size: 28px;
-}
-
-.container {
-    padding: 20px;
-    width: 90%;
-    margin: auto;
-    margin-top: 20px;
-}
-
-textarea, input {
-    width: 100%;
-    background: rgba(0,0,0,0.6);
-    color: #00ff00;
-    border: 1px solid #00ff00;
-    padding: 10px;
-    backdrop-filter: blur(4px);
-}
-
-textarea {
-    height: 250px;
-}
-
-button {
-    margin-top: 10px;
-    padding: 10px 20px;
-    background: #00ff00;
-    color: #000;
-    border: none;
-    cursor: pointer;
-    font-weight: bold;
-}
-
-.auth-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0,0,0,0.8);
-    backdrop-filter: blur(5px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10;
-}
-
-.auth-card {
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid #00ff00;
-    padding: 30px;
-    width: 300px;
-    text-align: center;
-    border-radius: 10px;
-    backdrop-filter: blur(5px);
-}
-
-.auth-card h2 {
-    margin-bottom: 20px;
-    color: #00ff00;
-}
-
-.auth-card input {
-    margin-bottom: 15px;
-}
-
-.auth-card button {
-    width: 100%;
-}
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: monospace;
+    }
+    body {
+        background: #000;
+        color: #00ff00;
+        overflow: hidden;
+    }
+    canvas {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100vw; height: 100vh;
+        z-index: -1;
+    }
+    .header {
+        display: flex;
+        align-items: center;
+        padding: 20px;
+        gap: 15px;
+    }
+    .header img {
+        width: 50px;
+        height: 50px;
+        border-radius: 100%;
+        border: 2px solid #00ff00;
+    }
+    .header h1 {
+        font-size: 28px;
+    }
+    .container {
+        padding: 20px;
+        width: 90%;
+        margin: auto;
+    }
+    textarea, input {
+        width: 100%;
+        background: rgba(0,0,0,0.6);
+        color: #00ff00;
+        border: 1px solid #00ff00;
+        padding: 10px;
+    }
+    textarea { height: 250px; }
+    button {
+        margin-top: 10px;
+        padding: 10px 20px;
+        background: #00ff00;
+        color: #000;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    .auth-overlay {
+        position: fixed;
+        top: 0; left: 0; width: 100vw; height: 100vh;
+        background: rgba(0,0,0,0.8);
+        display: flex; justify-content: center; align-items: center;
+        z-index: 10;
+    }
+    .auth-card {
+        background: rgba(0,0,0,0.3);
+        padding: 30px;
+        width: 300px;
+        border: 1px solid #00ff00;
+        border-radius: 10px;
+    }
+    .file-list {
+        margin-top: 25px;
+        padding: 10px;
+        border: 1px solid #00ff00;
+        background: rgba(0,0,0,0.4);
+    }
+    .file-item {
+        padding: 8px;
+        border-bottom: 1px solid #00ff00;
+        display: flex;
+        justify-content: space-between;
+    }
 </style>
 </head>
 
 <body>
+
+<!-- MUSIC AUTOPLAY -->
+<iframe
+    width="0" height="0"
+    src="https://youtu.be/sWE9sJIgw9E?si=Lp6yJRCuAyBl21NW"
+    frameborder="0">
+</iframe>
 
 <canvas id="matrix"></canvas>
 
@@ -128,7 +107,7 @@ button {
 </div>
 
 <div class="header">
-    <img src="https://i.ibb.co/NgnFLKpm/image.jpg" alt="Profile">
+    <img src="https://i.ibb.co/NgnFLKpm/image.jpg">
     <h1>Raw File Generator</h1>
 </div>
 
@@ -136,72 +115,104 @@ button {
     <textarea id="code" placeholder="Paste your raw code here..."></textarea>
     <button onclick="generate()">Generate RAW URL</button>
     <input id="result" placeholder="Your RAW URL will appear here..." readonly />
+
+    <div class="file-list" id="fileList"></div>
 </div>
 
 <script>
 const correctPassword = "sevPOGIAKO";
 
 function authCheck() {
-    const input = document.getElementById("pass").value;
-    if (input === correctPassword) {
+    if (document.getElementById("pass").value === correctPassword) {
         document.getElementById("auth").style.display = "none";
-    } else {
-        alert("Wrong password.");
-    }
+        loadFiles();
+    } else alert("Wrong password.");
 }
 
-/* FIXED RAW GENERATOR */
+/* ---- CREATE RAW ---- */
 async function generate() {
-    const code = document.getElementById("code").value.trim();
-    if (!code) return alert("Paste something!");
+    const code = document.getElementById("code").value;
+    if (!code.trim()) return alert("Paste something!");
 
-    let res = await fetch("/api/create", {
+    const res = await fetch("/api/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code })
-    }).catch(() => alert("Server error"));
+    });
 
     const data = await res.json();
-
-    if (data.url) {
-        document.getElementById("result").value = data.url;
-    } else {
-        alert("Failed to generate raw URL");
-    }
+    document.getElementById("result").value = data.url;
+    loadFiles();
 }
 
-/* FIXED MATRIX CODE */
+/* ---- LIST FILES ---- */
+async function loadFiles() {
+    const res = await fetch("/api/list");
+    const files = await res.json();
+
+    let html = "<h3>Saved Files:</h3>";
+    files.forEach(f => {
+        html += `
+            <div class="file-item">
+                <span>${f}</span>
+                <div>
+                    <button onclick="editFile('${f}')">Edit</button>
+                    <button onclick="deleteFile('${f}')">Delete</button>
+                </div>
+            </div>
+        `;
+    });
+    document.getElementById("fileList").innerHTML = html;
+}
+
+/* ---- EDIT ---- */
+async function editFile(name) {
+    const newCode = prompt("Edit file content:");
+    if (!newCode) return;
+
+    await fetch("/api/edit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, code: newCode })
+    });
+
+    loadFiles();
+}
+
+/* ---- DELETE ---- */
+async function deleteFile(name) {
+    await fetch("/api/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name })
+    });
+
+    loadFiles();
+}
+
+/* ---- MATRIX ---- */
 const canvas = document.getElementById("matrix");
 const ctx = canvas.getContext("2d");
-
 canvas.height = window.innerHeight;
 canvas.width = window.innerWidth;
-
 const letters = "01abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const fontSize = 14;
 const columns = canvas.width / fontSize;
-
 const drops = [];
 for (let i = 0; i < columns; i++) drops[i] = 1;
 
 function draw() {
-    ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
+    ctx.fillStyle = "rgba(0,0,0,0.05)";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
     ctx.fillStyle = "#0f0";
     ctx.font = fontSize + "px monospace";
-
     for (let i = 0; i < drops.length; i++) {
         const text = letters.charAt(Math.floor(Math.random() * letters.length));
         ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-
-        if (drops[i] * fontSize > canvas.height && Math.random() > 0.95)
-            drops[i] = 0;
-
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.95) drops[i] = 0;
         drops[i]++;
     }
 }
-
 setInterval(draw, 40);
 </script>
 
