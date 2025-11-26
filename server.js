@@ -1,55 +1,47 @@
 const express = require("express");
-const bodyParser = require("body-parser");
-const crypto = require("crypto");
+const fs = require("fs");
 const path = require("path");
 
 const app = express();
+app.use(express.json());
+app.use(express.static("public"));
 
-// serve HTML from /public
-app.use(express.static(path.join(__dirname, "public")));
-app.use(bodyParser.json());
+const dataDir = "files";
+if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir);
 
-/* database */
-const raws = {}; // raws[id] = { code }
-
-/* create raw */
+/* ---- CREATE ---- */
 app.post("/api/create", (req, res) => {
-    const { code } = req.body;
-
-    if (!code) return res.json({ error: "No code provided" });
-
-    const id = crypto.randomBytes(8).toString("hex");
-    raws[id] = { code };
-
-    const fullUrl = `${req.protocol}://${req.get("host")}/raw/${id}`;
-
-    res.json({ url: fullUrl });
+    const code = req.body.code;
+    const id = Date.now().toString() + ".txt";
+    fs.writeFileSync(path.join(dataDir, id), code);
+    res.json({ url: `/raw/${id}` });
 });
 
-/* access raw */
-app.get("/raw/:id", (req, res) => {
-    const id = req.params.id;
-
-    if (!raws[id]) return res.status(404).send("Invalid RAW ID.");
-
-    const ua = req.headers["user-agent"] || "";
-
-    const isRoblox =
-        ua.includes("Roblox") ||
-        ua.includes("HttpService") ||
-        ua.includes("Game") ||
-        ua === "";
-
-    if (isRoblox) {
-        res.setHeader("Content-Type", "text/plain");
-        return res.send(raws[id].code);
-    }
-
-    res.setHeader("Content-Type", "text/plain");
-    res.send("ANO SKID PA?");
+/* ---- SERVE RAW ---- */
+app.get("/raw/:file", (req, res) => {
+    const file = req.params.file;
+    const p = path.join(dataDir, file);
+    if (!fs.existsSync(p)) return res.status(403).send("Access denied.");
+    res.sendFile(path.resolve(p));
 });
 
-/* start server */
-app.listen(3000, () => {
-    console.log("Server running on http://localhost:3000");
+/* ---- LIST ---- */
+app.get("/api/list", (req, res) => {
+    res.json(fs.readdirSync(dataDir));
 });
+
+/* ---- EDIT ---- */
+app.post("/api/edit", (req, res) => {
+    const { name, code } = req.body;
+    fs.writeFileSync(path.join(dataDir, name), code);
+    res.json({ success: true });
+});
+
+/* ---- DELETE ---- */
+app.post("/api/delete", (req, res) => {
+    const { name } = req.body;
+    fs.unlinkSync(path.join(dataDir, name));
+    res.json({ success: true });
+});
+
+app.listen(3000, () => console.log("Server running on port 3000"));
